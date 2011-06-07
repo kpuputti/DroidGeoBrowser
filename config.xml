@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:gap="http://phonegap.com/ns/1.0"
+        id="fi.kpuputti.droidgeobrowser"
+        version="0.0.1">
+
+  <name>NoTag</name>
+
+  <description>
+    GeoNames place browser for Android
+  </description>
+
+  <author href="http://kpuputti.fi"
+          email="kpuputti@gmail.com">
+    Kimmo Puputti
+  </author>
+
+  <gap:platforms>
+    <gap:platform name="android" minVersion="2.2" />
+    <gap:platform name="webos" />
+    <gap:platform name="symbian.wrt" />
+    <gap:platform name="blackberry" project="widgets"/>
+  </gap:platforms>
+
+  <feature name="http://api.phonegap.com/1.0/geolocation"/>
+  <feature name="http://api.phonegap.com/1.0/network"/>
+
+</widget>
