@@ -34,7 +34,7 @@ h1 {
 .page {
     display: none;
 }
-.page:first-child {
+#page-index {
     display: block;
 }
 
