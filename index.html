@@ -8,31 +8,28 @@
   </head>
   <body>
 
-    <!-- Index page (country listing) -->
-    <section id="page-index" class="page">
-      <header>
-        <h1>World</h1>
-      </header>
-      <div class="content">
-        <ul class="listview">
-          <li>Item 1</li>
-          <li>Item 2</li>
-          <li>Item 3</li>
-          <li>Item 4</li>
-          <li>Item 5</li>
-          <li>Item 6</li>
-          <li>Item 7</li>
-          <li>Item 8</li>
-          <li>Item 9</li>
-          <li>Item 10</li>
-        </ul>
-      </div>
-    </section>
+    <ul id="log" style="display: none;"></ul>
+
+    <div id="pages">
+
+      <!-- Index page (country listing) -->
+      <section id="page-index" class="page">
+        <header>
+          <h1>Droid Geo Browser</h1>
+        </header>
+        <div class="content">
+          <ul class="listview"></ul>
+        </div>
+      </section>
+
+    </div>
 
     <script src="phonegap.js"></script>
     <script src="lib/jquery-1.6.1.min.js"></script>
+    <script src="lib/mustache.js"></script>
     <script src="js/geo.js"></script>
     <script>
+      document.addEventListener('deviceready', geo.init, false);
       $(geo.init);
     </script>
   </body>
