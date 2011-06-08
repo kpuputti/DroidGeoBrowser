@@ -11,17 +11,7 @@
     <ul id="log" style="display: none;"></ul>
 
     <div id="pages">
-
-      <!-- Index page (country listing) -->
-      <section id="page-index" class="page">
-        <header>
-          <h1>Droid Geo Browser</h1>
-        </header>
-        <div class="content">
-          <ul class="listview"></ul>
-        </div>
-      </section>
-
+      <p id="loading">Loading...</p>
     </div>
 
     <script src="phonegap.js"></script>
@@ -30,7 +20,7 @@
     <script src="js/geo.js"></script>
     <script>
       document.addEventListener('deviceready', geo.init, false);
-      $(geo.init);
+      //$(geo.init);
     </script>
   </body>
 </html>

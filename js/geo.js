@@ -1,7 +1,7 @@
 /*jslint white: true, devel: true, onevar: false, undef: true, nomen: true,
   regexp: true, plusplus: false, bitwise: true, newcap: true, maxerr: 50,
   indent: 4 */
-/*global jQuery: false, window: false, Mustache: false */
+/*global jQuery: false, window: false, Mustache: false, location: false, setTimeout: false */
 
 (function ($) {
 
@@ -15,88 +15,156 @@
     };
 
     var config = {
-        rootId: '6295630'
+        rootId: '6295630',
+        rootTitle: 'Earth'
     };
 
     var templates = {
+        getUrl: 'http://api.geonames.org/getJSON?formatted=true&geonameId={{geonameId}}&username=kpuputti',
         childrenUrl: 'http://api.geonames.org/childrenJSON?geonameId={{geonameId}}&username=kpuputti',
-        section: '<section id="page-{{geonameId}}" class="page">' +
-            '<header><h1>{{title}}</h1></header>' +
+        listing: '<section id="listing-{{geonameId}}" class="page">' +
+            '<header><h1><a href="#info-{{geonameId}}">{{toponymName}}</a></h1></header>' +
             '<div class="content">' +
             '<ul class="listview"></ul>' +
             '</div>' +
             '</section>',
-        geoname: '<li><a href="page-{{geonameId}}" class="geoname">{{toponymName}}</a></li>'
+        listingEntry: '<li><a href="#listing-{{geonameId}}" class="geoname">' +
+            '{{#flagImage}}' +
+            '<img class="flag" src="img/flags/{{flagImage}}" />' +
+            '{{/flagImage}}' +
+            '<span class="title">{{toponymName}}, fcode: {{fcode}}</span>' +
+            '</a></li>',
+        info: '<section id="info-{{geonameId}}" class="page">' +
+            '<header><h1>{{toponymName}}</h1></header>' +
+            '<div class="content">' +
+            '<p><strong>geonameId</strong>: {{geonameId}}</p>' +
+            '<p><strong>fclName</strong>: {{fclName}}</p>' +
+            '<p><strong>latitude</strong>: {{lat}}</p>' +
+            '<p><strong>longitude</strong>: {{lng}}</p>' +
+            '<p><strong>population</strong>: {{population}}</p>' +
+            '</div>' +
+            '</section>'
     };
 
-    var indexList;
+    var loading;
 
-    var addPage = function (pageId, title, callback) {
+    var showLoading = function () {
+        loading.fadeIn('fast');
+    };
+
+    var hideLoading = function () {
+        loading.fadeOut('fast');
+    };
+
+    var addListingPage = function (pageId, callback) {
         var geonameId = pageId.split('-')[1];
-        var url = Mustache.to_html(templates.childrenUrl, {
+        var getUrl = Mustache.to_html(templates.getUrl, {
             geonameId: geonameId
         });
-        log('adding page:', pageId, geonameId, url);
-        $.getJSON(url, function (data) {
-            $('#pages').append(Mustache.to_html(templates.section, {
-                geonameId: geonameId,
-                title: title
-            }));
+        var childrenUrl = Mustache.to_html(templates.childrenUrl, {
+            geonameId: geonameId
+        });
+        log('adding listing page:', pageId, geonameId);
+        $.getJSON(getUrl, function (geoname) {
+            var page = $(Mustache.to_html(templates.listing, geoname));
+
+            $.getJSON(childrenUrl, function (children) {
+                var geonameList = page.find('.content > .listview');
+                if (children.totalResultsCount) {
+                    var geonames = children.geonames;
+                    var len = geonames.length;
+                    var geoname;
+                    for (var i = 0; i < len; ++i) {
+                        geoname = geonames[i];
+                        geoname.flagImage = geoname.fcode === 'PCLI' && geoname.countryCode ?
+                            geoname.countryCode.toLowerCase() + '.png' : false;
+                        geonameList.append(Mustache.to_html(templates.listingEntry, geonames[i]));
+                    }
+                } else {
+                    showPage('#info-' + geonameId);
+                }
+                $('#pages').append(page);
+                callback();
+            });
+        });
+    };
+
+    var addInfoPage = function (pageId, callback) {
+        var geonameId = pageId.split('-')[1];
+        var getUrl = Mustache.to_html(templates.getUrl, {
+            geonameId: geonameId
+        });
+        log('adding info page:', pageId);
+        $.getJSON(getUrl, function (data) {
+            var page = $(Mustache.to_html(templates.info, data));
+            $('#pages').append(page);
             callback();
         });
     };
 
-    var showPage = function (href, title) {
-        log('showing page:', href, title);
-        $('section.page').hide();
-        var page = $('#pages > #' + href);
-        if (page.length) {
+    var showPage = function (href) {
+
+        $('.current').hide().removeClass('current');
+
+        var page = $('#pages > ' + href);
+        log('page.length:', page.length);
+        if (page.length === 1) {
             log('page already fetched, showing');
-            page.show();
-        } else {
-            addPage(href, title, function () {
-                log('showing:', title, href);
-                $('#pages > #' + href).fadeIn();
+            page.addClass('current').fadeIn();
+            return;
+        }
+
+        showLoading();
+        var type = href.replace(/^#/, '').split('-')[0];
+
+        if (type === 'listing') {
+            addListingPage(href, function () {
+                hideLoading();
+                $('#pages > ' + href).addClass('current').show();
+            });
+        } else if (type === 'info') {
+            addInfoPage(href, function () {
+                hideLoading();
+                $('#pages > ' + href).addClass('current').show();
             });
         }
-    };
 
-    var updateIndex = function () {
-        log('updateIndex');
-        var url = Mustache.to_html(templates.childrenUrl, {
-            geonameId: config.rootId
-        });
-        $.getJSON(url, function (data) {
-            if (data.totalResultsCount) {
-                log('fetched ' + data.totalResultsCount + ' geonames');
-                var geonames = data.geonames;
-                var len = geonames.length;
-                indexList.hide();
-                for (var i = 0; i < len; ++i) {
-                    indexList.append(Mustache.to_html(templates.geoname, geonames[i]));
-                }
-                indexList.fadeIn();
-            } else {
-                log('Did not find any places.');
-            }
-
-        });
     };
 
     var geo = {};
 
     geo.init = function () {
         log('geo.init');
-        indexList = $('#page-index ul');
-        updateIndex();
 
-        $('#pages').click(function (e) {
+        loading = $('#loading');
+
+        $('#pages').bind('touchstart', function (e) {
             var target = $(e.target);
             if (target.is('a.geoname')) {
-                e.preventDefault();
-                showPage(target.attr('href'), target.text());
+                target.addClass('hover');
             }
+        }).bind('touchmove', function (e) {
+            $(e.target).removeClass('hover');
+        }).bind('touchend', function (e) {
+            $(e.target).removeClass('hover');
         });
+
+        var rootHash = '#listing-' + config.rootId;
+        window.addEventListener('hashchange', function () {
+            log('hash change to:', location.hash);
+            if (location.hash) {
+                showPage(location.hash);
+            } else {
+                showPage(rootHash);
+            }
+        }, false);
+
+        if (location.hash) {
+            showPage(location.hash);
+        } else {
+            // Show root geoname (Earth).
+            location.hash = rootHash;
+        }
 
     };
     // Expose the namespace.

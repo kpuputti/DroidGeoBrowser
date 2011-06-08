@@ -15,36 +15,81 @@ html {
     color: #ccc;
     font-family: Verdana, sans-serif;
 }
+strong {
+    font-weight: bold;
+}
 
 /* Header */
 header {
     height: 60px;
     line-height: 60px;
     font-size: 18px;
-    margin-bottom: 5px;
     background: #424242;
-    color: #dfdfdf;
+    overflow: hidden;
 }
 h1 {
     font-weight: bold;
     margin-left: 5px;
 }
+header a {
+    text-decoration: none;
+    color: #dfdfdf;
+}
+
+#pages {
+    position: relative;
+}
+#loading {
+    display: none;
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    margin-left: -100px;
+    width: 200px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    z-index: 99;
+    background: #000;
+    color: #eee;
+    border: 5px solid #666;
+    border-radius: 10px;
+}
 
 /* Page */
 .page {
     display: none;
+    overflow: hidden;
 }
-#page-index {
-    display: block;
+.current {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 /* List view */
 .listview > li {
-    padding: 5px;
     border-top: 1px solid #666;
-    height: 50px;
-    line-height: 50px;
 }
 .listview > li:first-child {
     border-top: none;
+}
+.listview .flag {
+    width: 16px;
+    height: 11px;
+    float: left;
+    margin: 7px;
+}
+.listview > li > a {
+    display: block;
+    min-height: 30px;
+    line-height: 1.6em;
+    padding: 20px 5px 15px 5px;
+    color: #dfdfdf;
+    text-decoration: none;
+}
+.listview > li > a:active,
+.listview > li > a.hover {
+    background-color: #222;
 }
