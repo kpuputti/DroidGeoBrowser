@@ -7,11 +7,8 @@
 (function ($) {
 
     var log = function () {
-        var args = Array.prototype.slice.call(arguments);
-        $('<li></li>').text(args.join('')).appendTo('#log');
         if (window.console) {
-            //console.log(Array.prototype.slice.call(arguments));
-            console.log(args);
+            console.log(Array.prototype.slice.call(arguments));
         }
     };
 
