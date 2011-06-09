@@ -1,7 +1,8 @@
 /*jslint white: true, devel: true, onevar: false, undef: true, nomen: true,
   regexp: true, plusplus: false, bitwise: true, newcap: true, maxerr: 50,
   indent: 4 */
-/*global jQuery: false, window: false, Mustache: false, location: false, setTimeout: false */
+/*global jQuery: false, window: false, Mustache: false, location: false, setTimeout: false, google: false*/
+
 
 (function ($) {
 
@@ -32,7 +33,7 @@
             '{{#flagImage}}' +
             '<img class="flag" src="img/flags/{{flagImage}}" />' +
             '{{/flagImage}}' +
-            '<span class="title">{{toponymName}}, fcode: {{fcode}}</span>' +
+            '<span class="title">{{toponymName}}</span>' +
             '</a></li>',
         info: '<section id="info-{{geonameId}}" class="page">' +
             '<header><h1>{{toponymName}}</h1></header>' +
@@ -42,8 +43,12 @@
             '<p><strong>latitude</strong>: {{lat}}</p>' +
             '<p><strong>longitude</strong>: {{lng}}</p>' +
             '<p><strong>population</strong>: {{population}}</p>' +
+            '<p><a class="show-map" href="#map">show on map</a></p>' +
             '</div>' +
-            '</section>'
+            '</section>',
+        mapInfoWindow: '<div class="info-window">' +
+            '<h3>{{toponymName}}</h3>' +
+            '</div>'
     };
 
     var loading;
@@ -54,6 +59,39 @@
 
     var hideLoading = function () {
         loading.fadeOut('fast');
+    };
+
+    var map;
+    var mapInitialized = false;
+    var infoWindow;
+
+    var initMap = function () {
+        log('init map');
+        var mapElem = $('#map');
+        map = new google.maps.Map(mapElem.get(0), {
+            zoom: 6,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+        mapElem.height($(window).height());
+        map.setCenter(new google.maps.LatLng(60.154723, 24.8866736));
+        mapInitialized = true;
+    };
+
+    var showMap = function (geoname) {
+        if (!mapInitialized) {
+            initMap();
+        }
+        log('show map', geoname);
+        if (infoWindow) {
+            infoWindow.close();
+        }
+        var latlng = new google.maps.LatLng(geoname.lat, geoname.lng);
+        map.panTo(latlng);
+        infoWindow = new google.maps.InfoWindow({
+            content: Mustache.to_html(templates.mapInfoWindow, geoname),
+            position: latlng
+        });
+        infoWindow.open(map);
     };
 
     var addListingPage = function (pageId, callback) {
@@ -81,7 +119,9 @@
                         geonameList.append(Mustache.to_html(templates.listingEntry, geonames[i]));
                     }
                 } else {
-                    showPage('#info-' + geonameId);
+                    var hash = '#info-' + geonameId;
+                    location.hash = hash;
+                    showPage(hash);
                 }
                 $('#pages').append(page);
                 callback();
@@ -95,8 +135,11 @@
             geonameId: geonameId
         });
         log('adding info page:', pageId);
-        $.getJSON(getUrl, function (data) {
-            var page = $(Mustache.to_html(templates.info, data));
+        $.getJSON(getUrl, function (geoname) {
+            var page = $(Mustache.to_html(templates.info, geoname));
+            page.find('.show-map').click(function (e) {
+                showMap(geoname);
+            });
             $('#pages').append(page);
             callback();
         });
@@ -107,7 +150,6 @@
         $('.current').hide().removeClass('current');
 
         var page = $('#pages > ' + href);
-        log('page.length:', page.length);
         if (page.length === 1) {
             log('page already fetched, showing');
             page.addClass('current').fadeIn();
@@ -159,13 +201,18 @@
             }
         }, false);
 
-        if (location.hash) {
+        if (location.hash && location.hash !== '#map') {
             showPage(location.hash);
         } else {
             // Show root geoname (Earth).
             location.hash = rootHash;
         }
 
+        // Generic error catcher.
+        window.onerror = function () {
+            var args = Array.prototype.slice.call(arguments);
+            alert('Application error: ' + args.join('\n'));
+        };
     };
     // Expose the namespace.
     window.geo = geo;

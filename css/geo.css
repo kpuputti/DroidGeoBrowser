@@ -44,6 +44,7 @@ header a {
     position: absolute;
     top: 50px;
     left: 50%;
+    opacity: 0.7;
     margin-left: -100px;
     width: 200px;
     height: 60px;
@@ -83,6 +84,8 @@ header a {
 }
 .listview > li > a {
     display: block;
+    width: 100%;
+    overflow: hidden;
     min-height: 30px;
     line-height: 1.6em;
     padding: 20px 5px 15px 5px;
