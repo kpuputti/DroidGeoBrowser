@@ -14,14 +14,28 @@
 
     var config = {
         rootId: '6295630',
-        rootTitle: 'Earth'
+        rootTitle: 'Earth',
+
+        // fcodes that should have a flag in the listing
+        flagCodes: {
+            'PCLI': true,
+            'PCLD': true,
+            'TERR': true,
+            'PCLIX': true,
+            'PCLS': true,
+            'PCLF': true
+        }
     };
 
     var templates = {
         getUrl: 'http://api.geonames.org/getJSON?geonameId={{geonameId}}&username=kpuputti',
         childrenUrl: 'http://api.geonames.org/childrenJSON?geonameId={{geonameId}}&username=kpuputti',
+        searchUrl: 'http://api.geonames.org/searchJSON?q={{query}}&maxRows=500&username=kpuputti',
         listing: '<section id="listing-{{geonameId}}" class="page">' +
-            '<header><h1><a href="#info-{{geonameId}}">{{toponymName}}</a></h1></header>' +
+            '<header><h1>' +
+            '<a href="#info-{{geonameId}}">{{toponymName}}</a>' +
+            '<a class="search-link" href="#search"></a>' +
+            '</h1></header>' +
             '<div class="content">' +
             '<ul class="listview"></ul>' +
             '</div>' +
@@ -33,10 +47,14 @@
             '<span class="title">{{toponymName}}</span>' +
             '</a></li>',
         info: '<section id="info-{{geonameId}}" class="page">' +
-            '<header><h1>{{toponymName}}</h1></header>' +
+            '<header><h1>' +
+            '{{toponymName}}' +
+            '<a class="search-link" href="#search"></a>' +
+            '</h1></header>' +
             '<div class="content">' +
             '<p><strong>geonameId</strong>: {{geonameId}}</p>' +
             '<p><strong>fclName</strong>: {{fclName}}</p>' +
+            '<p><strong>fcode</strong>: {{fcode}}</p>' +
             '<p><strong>latitude</strong>: {{lat}}</p>' +
             '<p><strong>longitude</strong>: {{lng}}</p>' +
             '<p><strong>population</strong>: {{population}}</p>' +
@@ -45,7 +63,8 @@
             '</section>',
         mapInfoWindow: '<div class="info-window">' +
             '<h3>{{toponymName}}</h3>' +
-            '</div>'
+            '</div>',
+        searchResult: '<li><a class="geoname" href="#info-{{geonameId}}">{{toponymName}}</a></li>'
     };
 
     var loading;
@@ -64,7 +83,7 @@
 
     var initMap = function () {
         log('init map');
-        var mapElem = $('#map');
+        var mapElem = $('#map > div');
         map = new google.maps.Map(mapElem.get(0), {
             zoom: 6,
             mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -78,7 +97,7 @@
         if (!mapInitialized) {
             initMap();
         }
-        log('show map', geoname);
+        log('show map', geoname.toponymName);
         if (infoWindow) {
             infoWindow.close();
         }
@@ -109,9 +128,10 @@
                     var geonames = children.geonames;
                     var len = geonames.length;
                     var geoname;
+                    var fcode;
                     for (var i = 0; i < len; ++i) {
                         geoname = geonames[i];
-                        geoname.flagImage = geoname.fcode === 'PCLI' && geoname.countryCode ?
+                        geoname.flagImage = (config.flagCodes[geoname.fcode]) && geoname.countryCode ?
                             geoname.countryCode.toLowerCase() + '.png' : false;
                         geonameList.append(Mustache.to_html(templates.listingEntry, geonames[i]));
                     }
@@ -136,18 +156,19 @@
                 showMap(geoname);
             });
             $('#pages').append(page);
-            callback();
+            callback(geoname);
         });
     };
 
     var showPage = function (href) {
-
+        log('showing page:', href);
         $('.current').hide().removeClass('current');
 
         var page = $('#pages > ' + href);
         if (page.length === 1) {
             log('page already fetched, showing');
-            page.addClass('current').fadeIn();
+            page.addClass('current').show();
+            hideLoading();
             return;
         }
 
@@ -160,12 +181,41 @@
                 $('#pages > ' + href).addClass('current').show();
             });
         } else if (type === 'info') {
-            addInfoPage(href, function () {
+            addInfoPage(href, function (geoname) {
+                log('showing info page:', geoname);
                 hideLoading();
                 $('#pages > ' + href).addClass('current').show();
             });
+        } else {
+            log('unknown page type:', type, 'href');
+            hideLoading();
         }
 
+    };
+
+    var search = function (query) {
+        log('searching for:', query);
+        showLoading();
+        var results = $('#results');
+        results.empty().hide();
+        var url = Mustache.to_html(templates.searchUrl, {
+            query: query
+        });
+        $.getJSON(url, function (data) {
+            var count = data.totalResultsCount;
+            log('found', count, 'results');
+            if (count) {
+                var geonames = data.geonames;
+                var len = geonames.length;
+                for (var i = 0; i < len; ++i) {
+                    results.append(Mustache.to_html(templates.searchResult, geonames[i]));
+                }
+            } else {
+                $('<li></li>').text('no results found').appendTo(results);
+            }
+            hideLoading();
+            results.fadeIn();
+        });
     };
 
     var geo = {};
@@ -196,12 +246,23 @@
             }
         }, false);
 
-        if (location.hash && location.hash !== '#map') {
-            showPage(location.hash);
+        var hash = location.hash;
+        log('hash:', hash);
+        if (hash === '#search' || /^#(info|listing)-\d+$/.test(hash)) {
+            // Show the corrensponding page based on initial hash.
+            showPage(hash);
         } else {
             // Show root geoname (Earth).
+            log('root hash:', rootHash);
             location.hash = rootHash;
+            showPage(rootHash);
         }
+
+        var queryInput = $('#search input[type=search]');
+        $('#search > form').submit(function (e) {
+            e.preventDefault();
+            search(queryInput.val());
+        });
 
         // Generic error catcher.
         window.onerror = function () {
