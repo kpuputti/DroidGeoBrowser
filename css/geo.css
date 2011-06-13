@@ -95,3 +95,25 @@ header a {
 .listview > li > a.hover {
     background-color: #222;
 }
+
+/* Search */
+.search-link {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 50px;
+    line-height: 50px;
+    text-align: center;
+    width: 70px;
+    height: 60px;
+    padding-left: 10px;
+    background: #666 url(../img/search.png) 15px 5px no-repeat;
+}
+#search form {
+    margin-top: 5px;
+    text-align: center;
+}
+#search input[type=search] {
+    font-size: 1.2em;
+    width: 98%;
+}
