@@ -10,7 +10,17 @@
 
     <div id="pages">
       <p id="loading">Loading...</p>
-      <div id="map"></div>
+      <section id="map" class="page">
+        <div></div>
+      </section>
+      <section id="search" class="page">
+        <form>
+          <p>
+            <input type="search" placeholder="Search for places e.g. 'London'" />
+          </p>
+        </form>
+        <ul id="results" class="listview"></ul>
+      </section>
     </div>
 
     <script src="phonegap.js"></script>
