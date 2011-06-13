@@ -34,7 +34,7 @@
         searchUrl: 'http://api.geonames.org/searchJSON?q={{query}}&maxRows=500&username=kpuputti',
         listing: '<section id="listing-{{geonameId}}" class="page">' +
             '<header><h1>' +
-            '<a href="#info-{{geonameId}}">{{toponymName}}</a>' +
+            '<a href="#info-{{geonameId}}">{{name}}</a>' +
             '<a class="search-link" href="#search"></a>' +
             '</h1></header>' +
             '<div class="content">' +
@@ -45,11 +45,11 @@
             '{{#flagImage}}' +
             '<img class="flag" src="img/flags/{{flagImage}}" />' +
             '{{/flagImage}}' +
-            '<span class="title">{{toponymName}}</span>' +
+            '<span class="title">{{name}}</span>' +
             '</a></li>',
         info: '<section id="info-{{geonameId}}" class="page">' +
             '<header><h1>' +
-            '{{toponymName}}' +
+            '{{name}}' +
             '<a class="search-link" href="#search"></a>' +
             '</h1></header>' +
             '<div class="content">' +
@@ -63,9 +63,9 @@
             '</div>' +
             '</section>',
         mapInfoWindow: '<div class="info-window">' +
-            '<h3>{{toponymName}}</h3>' +
+            '<h3>{{name}}</h3>' +
             '</div>',
-        searchResult: '<li><a class="geoname" href="#info-{{geonameId}}">{{toponymName}}</a></li>'
+        searchResult: '<li><a class="geoname" href="#info-{{geonameId}}">{{name}}, {{countryCode}}</a></li>'
     };
 
     // Loading indicator element.
