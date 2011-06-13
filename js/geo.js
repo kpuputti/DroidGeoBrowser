@@ -27,6 +27,7 @@
         }
     };
 
+    // Mustache templates.
     var templates = {
         getUrl: 'http://api.geonames.org/getJSON?geonameId={{geonameId}}&username=kpuputti',
         childrenUrl: 'http://api.geonames.org/childrenJSON?geonameId={{geonameId}}&username=kpuputti',
@@ -67,6 +68,7 @@
         searchResult: '<li><a class="geoname" href="#info-{{geonameId}}">{{toponymName}}</a></li>'
     };
 
+    // Loading indicator element.
     var loading;
 
     var showLoading = function () {
@@ -81,6 +83,7 @@
     var mapInitialized = false;
     var infoWindow;
 
+    // Initializes the map page (done once, only when first needed).
     var initMap = function () {
         log('init map');
         var mapElem = $('#map > div');
@@ -93,6 +96,7 @@
         mapInitialized = true;
     };
 
+    // Pan the map to the given geoname, initialize map if needed.
     var showMap = function (geoname) {
         if (!mapInitialized) {
             initMap();
@@ -110,6 +114,7 @@
         infoWindow.open(map);
     };
 
+    // Add a page that lists the children of the given id.
     var addListingPage = function (pageId, callback) {
         var geonameId = pageId.split('-')[1];
         var getUrl = Mustache.to_html(templates.getUrl, {
@@ -119,9 +124,12 @@
             geonameId: geonameId
         });
         log('adding listing page:', pageId, geonameId);
+
+        // 1. Fetch info for the given geoname.
         $.getJSON(getUrl, function (geoname) {
             var page = $(Mustache.to_html(templates.listing, geoname));
 
+            // 2. Fetch the children of the geoname.
             $.getJSON(childrenUrl, function (children) {
                 var geonameList = page.find('.content > .listview');
                 if (children.totalResultsCount) {
@@ -131,6 +139,7 @@
                     var fcode;
                     for (var i = 0; i < len; ++i) {
                         geoname = geonames[i];
+                        // Add a flag icon only to those that are of the correct type.
                         geoname.flagImage = (config.flagCodes[geoname.fcode]) && geoname.countryCode ?
                             geoname.countryCode.toLowerCase() + '.png' : false;
                         geonameList.append(Mustache.to_html(templates.listingEntry, geonames[i]));
@@ -144,6 +153,7 @@
         });
     };
 
+    // Add an info page that lists the properties of the given id.
     var addInfoPage = function (pageId, callback) {
         var geonameId = pageId.split('-')[1];
         var getUrl = Mustache.to_html(templates.getUrl, {
@@ -160,11 +170,17 @@
         });
     };
 
+    // Show the given page. Fetch data and initialize the page if needed.
     var showPage = function (href) {
         log('showing page:', href);
+
+        // Hide the currently visible page.
         $('.current').hide().removeClass('current');
 
         var page = $('#pages > ' + href);
+
+        // Show the page if it the data is already
+        // fetched and the page initialized.
         if (page.length === 1) {
             log('page already fetched, showing');
             page.addClass('current').show();
@@ -175,6 +191,7 @@
         showLoading();
         var type = href.replace(/^#/, '').split('-')[0];
 
+        // Load the given page based on its type.
         if (type === 'listing') {
             addListingPage(href, function () {
                 hideLoading();
@@ -193,6 +210,7 @@
 
     };
 
+    // Do a search with the given query.
     var search = function (query) {
         log('searching for:', query);
         showLoading();
@@ -218,13 +236,17 @@
         });
     };
 
+    // Namespace wrapper for the app to be injected to the global namespace.
     var geo = {};
 
+    // Initialize the app.
     geo.init = function () {
         log('geo.init');
 
         loading = $('#loading');
 
+        // Add a hover class to link elements when touched
+        // to get a fast visual response of an action.
         $('#pages').bind('touchstart', function (e) {
             var target = $(e.target);
             if (target.is('a.geoname')) {
@@ -236,6 +258,7 @@
             $(e.target).removeClass('hover');
         });
 
+        // Listen for URL hash changes to run the corresponsing actions.
         var rootHash = '#listing-' + config.rootId;
         window.addEventListener('hashchange', function () {
             log('hash change to:', location.hash);
@@ -246,6 +269,7 @@
             }
         }, false);
 
+        // Execute the corresponding action on page initialization.
         var hash = location.hash;
         log('hash:', hash);
         if (hash === '#search' || /^#(info|listing)-\d+$/.test(hash)) {
@@ -258,6 +282,7 @@
             showPage(rootHash);
         }
 
+        // Add search form event handling.
         var queryInput = $('#search input[type=search]');
         $('#search > form').submit(function (e) {
             e.preventDefault();
