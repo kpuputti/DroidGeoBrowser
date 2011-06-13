@@ -18,7 +18,7 @@
     };
 
     var templates = {
-        getUrl: 'http://api.geonames.org/getJSON?formatted=true&geonameId={{geonameId}}&username=kpuputti',
+        getUrl: 'http://api.geonames.org/getJSON?geonameId={{geonameId}}&username=kpuputti',
         childrenUrl: 'http://api.geonames.org/childrenJSON?geonameId={{geonameId}}&username=kpuputti',
         listing: '<section id="listing-{{geonameId}}" class="page">' +
             '<header><h1><a href="#info-{{geonameId}}">{{toponymName}}</a></h1></header>' +
@@ -116,9 +116,7 @@
                         geonameList.append(Mustache.to_html(templates.listingEntry, geonames[i]));
                     }
                 } else {
-                    var hash = '#info-' + geonameId;
-                    location.hash = hash;
-                    showPage(hash);
+                    $('<li></li>').text('no places found').appendTo(geonameList);
                 }
                 $('#pages').append(page);
                 callback();
