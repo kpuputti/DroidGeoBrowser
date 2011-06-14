@@ -1,14 +1,16 @@
 /*jslint white: true, devel: true, onevar: false, undef: true, nomen: true,
   regexp: true, plusplus: false, bitwise: true, newcap: true, maxerr: 50,
   indent: 4 */
-/*global jQuery: false, window: false, Mustache: false, location: false, setTimeout: false, google: false*/
-
+/*global jQuery: false, window: false, document: false, Mustache: false,
+  location: false, setTimeout: false, google: false*/
 
 (function ($) {
 
     var log = function () {
         if (window.console) {
-            console.log(Array.prototype.slice.call(arguments));
+            var args = Array.prototype.slice.call(arguments);
+            args.unshift('Droid Geo Browser:');
+            console.log.apply(console, args);
         }
     };
 
@@ -35,7 +37,6 @@
         listing: '<section id="listing-{{geonameId}}" class="page">' +
             '<header><h1>' +
             '<a href="#info-{{geonameId}}">{{name}}</a>' +
-            '<a class="search-link" href="#search"></a>' +
             '</h1></header>' +
             '<div class="content">' +
             '<ul class="listview"></ul>' +
@@ -50,7 +51,6 @@
         info: '<section id="info-{{geonameId}}" class="page">' +
             '<header><h1>' +
             '{{name}}' +
-            '<a class="search-link" href="#search"></a>' +
             '</h1></header>' +
             '<div class="content">' +
             '<p><strong>geonameId</strong>: {{geonameId}}</p>' +
@@ -78,6 +78,45 @@
     var hideLoading = function () {
         loading.fadeOut('fast');
     };
+
+    var showMenu = (function () {
+
+        var menu;
+        var links;
+        var initialized = false;
+
+        var initMenu = function () {
+            log('init menu');
+            menu = $('#menu');
+            links = menu.find('a');
+
+            menu.bind('touchstart', function (e) {
+                var target = $(e.target);
+                log('menu click on:', target);
+                target.addClass('hover');
+            }).bind('touchmove', function () {
+                links.removeClass('hover');
+            }).bind('touchend', function () {
+                menu.fadeOut(function () {
+                    links.removeClass('hover');
+                });
+            });
+
+            initialized = true;
+        };
+
+        return function () {
+            if (!initialized) {
+                // Init menu.
+                initMenu();
+            }
+            log('show menu');
+            var scroll = $(window).scrollTop();
+            var height = $(window).height();
+            menu.css('top', scroll + height - 51);
+            menu.fadeIn();
+        };
+    }());
 
     var map;
     var mapInitialized = false;
@@ -244,6 +283,7 @@
         log('geo.init');
 
         loading = $('#loading');
+        var menu = $('#menu');
 
         // Add a hover class to link elements when touched
         // to get a fast visual response of an action.
@@ -254,6 +294,8 @@
             }
         }).bind('touchmove', function (e) {
             $(e.target).removeClass('hover');
+            // Hide menu (if visible) on scrolling the page.
+            menu.filter(':visible').hide();
         }).bind('touchend', function (e) {
             $(e.target).removeClass('hover');
         });
@@ -289,11 +331,33 @@
             search(queryInput.val());
         });
 
-        // Generic error catcher.
+        // jQuery ajax error handler.
+        $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+            log('AJAX ERROR:', event, jqXHR, ajaxSettings, thrownError);
+            alert('Error in ajax request.\n' + thrownError.name + ':\n' + thrownError.message);
+        });
+
+        // Generic error handler.
         window.onerror = function () {
             var args = Array.prototype.slice.call(arguments);
             alert('Application error: ' + args.join('\n'));
         };
+
+        document.addEventListener('searchbutton', function (e) {
+            log('search button pressed');
+            location.hash = '#search';
+        }, false);
+
+        // Menu handlers.
+        document.addEventListener('menubutton', function (e) {
+            log('menu button pressed');
+            if (menu.is(':visible')) {
+                menu.fadeOut();
+            } else {
+                showMenu();
+            }
+        }, false);
+
     };
     // Expose the namespace.
     window.geo = geo;
