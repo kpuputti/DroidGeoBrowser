@@ -37,6 +37,7 @@
         listing: '<section id="listing-{{geonameId}}" class="page">' +
             '<header><h1>' +
             '<a href="#info-{{geonameId}}">{{name}}</a>' +
+            '<a class="search-link" href="#search"></a>' +
             '</h1></header>' +
             '<div class="content">' +
             '<ul class="listview"></ul>' +
@@ -51,6 +52,7 @@
         info: '<section id="info-{{geonameId}}" class="page">' +
             '<header><h1>' +
             '{{name}}' +
+            '<a class="search-link" href="#search"></a>' +
             '</h1></header>' +
             '<div class="content">' +
             '<p><strong>geonameId</strong>: {{geonameId}}</p>' +
@@ -107,10 +109,8 @@
 
         return function () {
             if (!initialized) {
-                // Init menu.
                 initMenu();
             }
-            log('show menu');
             var scroll = $(window).scrollTop();
             var height = $(window).height();
             menu.css('top', scroll + height - 51);
@@ -140,7 +140,7 @@
         if (!mapInitialized) {
             initMap();
         }
-        log('show map', geoname.toponymName);
+        log('show map', geoname.name);
         if (infoWindow) {
             infoWindow.close();
         }
