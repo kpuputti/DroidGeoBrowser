@@ -321,7 +321,6 @@
             // Show root geoname (Earth).
             log('root hash:', rootHash);
             location.hash = rootHash;
-            showPage(rootHash);
         }
 
         // Add search form event handling.
@@ -334,7 +333,6 @@
         // jQuery ajax error handler.
         $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
             log('AJAX ERROR:', event, jqXHR, ajaxSettings, thrownError);
-            alert('Error in ajax request.\n' + thrownError.name + ':\n' + thrownError.message);
         });
 
         // Generic error handler.
