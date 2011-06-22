@@ -33,7 +33,7 @@
     var templates = {
         getUrl: 'http://api.geonames.org/getJSON?geonameId={{geonameId}}&username=kpuputti',
         childrenUrl: 'http://api.geonames.org/childrenJSON?geonameId={{geonameId}}&username=kpuputti',
-        searchUrl: 'http://api.geonames.org/searchJSON?q={{query}}&maxRows=500&username=kpuputti',
+        searchUrl: 'http://api.geonames.org/searchJSON?q={{query}}&maxRows=100&username=kpuputti',
         listing: '<section id="listing-{{geonameId}}" class="page">' +
             '<header><h1>' +
             '<a href="#info-{{geonameId}}">{{name}}</a>' +
@@ -153,6 +153,22 @@
         infoWindow.open(map);
     };
 
+    // Abstraction to the $.getJSON function with localStorage
+    // memoization.
+    var getCachedJSON = function (url, callback) {
+        var cachedData = window.localStorage[url];
+        if (cachedData) {
+            log('Data already cached, returning from cache:', url);
+            callback(JSON.parse(cachedData));
+        } else {
+            $.getJSON(url, function (data) {
+                log('Fetched data, saving to cache:', url);
+                window.localStorage[url] = JSON.stringify(data);
+                callback(data);
+            });
+        }
+    };
+
     // Add a page that lists the children of the given id.
     var addListingPage = function (pageId, callback) {
         var geonameId = pageId.split('-')[1];
@@ -165,11 +181,11 @@
         log('adding listing page:', pageId, geonameId);
 
         // 1. Fetch info for the given geoname.
-        $.getJSON(getUrl, function (geoname) {
+        getCachedJSON(getUrl, function (geoname) {
             var page = $(Mustache.to_html(templates.listing, geoname));
 
             // 2. Fetch the children of the geoname.
-            $.getJSON(childrenUrl, function (children) {
+            getCachedJSON(childrenUrl, function (children) {
                 var geonameList = page.find('.content > .listview');
                 if (children.totalResultsCount) {
                     var geonames = children.geonames;
@@ -199,7 +215,7 @@
             geonameId: geonameId
         });
         log('adding info page:', pageId);
-        $.getJSON(getUrl, function (geoname) {
+        getCachedJSON(getUrl, function (geoname) {
             var page = $(Mustache.to_html(templates.info, geoname));
             page.find('.show-map').click(function (e) {
                 showMap(geoname);
@@ -258,7 +274,7 @@
         var url = Mustache.to_html(templates.searchUrl, {
             query: query
         });
-        $.getJSON(url, function (data) {
+        getCachedJSON(url, function (data) {
             var count = data.totalResultsCount;
             log('found', count, 'results');
             if (count) {
