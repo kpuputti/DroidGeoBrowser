@@ -2,7 +2,7 @@
   regexp: true, plusplus: false, bitwise: true, newcap: true, maxerr: 50,
   indent: 4 */
 /*global jQuery: false, window: false, document: false, Mustache: false,
-  location: false, setTimeout: false, google: false*/
+  location: false, setTimeout: false, google: false, JSONCache: false */
 
 (function ($) {
 
@@ -156,17 +156,17 @@
     // Abstraction to the $.getJSON function with localStorage
     // memoization.
     var getCachedJSON = function (url, callback) {
-        var cachedData = window.localStorage[url];
-        if (cachedData) {
-            log('Data already cached, returning from cache:', url);
-            callback(JSON.parse(cachedData));
-        } else {
-            $.getJSON(url, function (data) {
-                log('Fetched data, saving to cache:', url);
-                window.localStorage[url] = JSON.stringify(data);
-                callback(data);
-            });
-        }
+        var loadingInfo = $('#loading > span');
+
+        JSONCache.getCachedJSON(url, {
+            success: callback,
+            retryHook: function (tryNumber) {
+                loadingInfo.text('Fetch number: ' + tryNumber);
+            },
+            JSONCacheError: function (status) {
+                alert('Network not working.');
+            }
+        });
     };
 
     // Add a page that lists the children of the given id.
