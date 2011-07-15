@@ -78,6 +78,7 @@
     };
 
     var hideLoading = function () {
+        loading.find('span').empty();
         loading.fadeOut('fast');
     };
 
@@ -158,12 +159,18 @@
     var getCachedJSON = function (url, callback) {
         var loadingInfo = $('#loading > span');
 
+        JSONCache.settings.waitTime = 500;
+        JSONCache.settings.numTries = 7;
+
         JSONCache.getCachedJSON(url, {
             success: callback,
             retryHook: function (tryNumber) {
-                loadingInfo.text('Fetch number: ' + tryNumber);
+                if (tryNumber > 1) {
+                    loadingInfo.text('Trying again (' + tryNumber + ')...');
+                }
             },
             JSONCacheError: function (status) {
+                hideLoading();
                 alert('Network not working.');
             }
         });
